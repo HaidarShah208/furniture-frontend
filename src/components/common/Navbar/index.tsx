@@ -14,7 +14,6 @@ import MegaMenu from "@/components/common/MegaMenu";
 import SearchOverlay from "@/components/common/SearchOverlay";
 import CartDrawer from "@/components/common/CartDrawer";
 import WishlistDrawer from "@/components/common/WishlistDrawer";
-import CompareDrawer from "@/components/common/CompareDrawer";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -85,7 +84,7 @@ export default function Navbar() {
         className={cn(
           "fixed left-0 right-0 top-0 z-50 transition-all duration-500",
           isScrolled
-            ? "glass-effect border-b border-luxury-border/50 py-3"
+            ? "glass-effect border-luxury-border/50 py-3"
             : "bg-transparent py-5"
         )}
         dir={direction}
@@ -139,18 +138,7 @@ export default function Navbar() {
             >
               <Search className="h-5 w-5" />
             </button>
-            <button
-              onClick={openCompare}
-              className={cn(iconClasses, "relative")}
-              aria-label="Compare"
-            >
-              <GitCompare className="h-5 w-5" />
-              {compareCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-luxury-gold text-[10px] font-bold text-white">
-                  {compareCount}
-                </span>
-              )}
-            </button>
+       
             <button
               onClick={() => setWishlistOpen(true)}
               className={cn(iconClasses, "relative")}
@@ -369,7 +357,6 @@ export default function Navbar() {
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       <WishlistDrawer open={wishlistOpen} onClose={() => setWishlistOpen(false)} />
-      <CompareDrawer open={compareOpen} onClose={closeCompare} />
     </>
   );
 }
