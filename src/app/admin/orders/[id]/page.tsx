@@ -2,33 +2,35 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MapPin, CreditCard, User, FileText, Check, Package } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, User, FileText, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAdminOrderById } from "@/data/admin";
+import { toast } from "sonner";
+import { useGetOrderByIdQuery, useUpdateOrderStatusMutation } from "@/redux/dashboard/apis/orders";
+import AdminFormSkeleton from "@/components/admin/AdminFormSkeleton";
+import AdminErrorState from "@/components/admin/AdminErrorState";
+import type { OrderStatus } from "@/types/admin/common";
 
-const allStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
+const allStatuses: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
 function OrderDetailContent({ id }: { id: string }) {
-  const order = getAdminOrderById(id);
-  const [status, setStatus] = useState(order?.status || "pending");
-  const [saved, setSaved] = useState(false);
+  const { data, isLoading, error, refetch } = useGetOrderByIdQuery(id);
+  const [updateStatus, { isLoading: updating }] = useUpdateOrderStatusMutation();
+  const order = data?.data;
+  const [status, setStatus] = useState<OrderStatus | "">("");
 
-  if (!order) {
-    return (
-      <div className="flex flex-col items-center py-20 text-center">
-        <h2 className="mb-2 text-lg font-bold text-luxury-dark">Order not found</h2>
-        <Link href="/admin/orders" className="mt-4 text-sm font-semibold text-luxury-gold hover:text-luxury-gold-hover">
-          &larr; Back to Orders
-        </Link>
-      </div>
-    );
-  }
+  if (isLoading) return <AdminFormSkeleton />;
+  if (error || !order) return <AdminErrorState message="Order not found" onRetry={refetch} />;
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const currentStatus = status || order.orderStatus;
+
+  const handleSave = async () => {
+    try {
+      await updateStatus({ id, data: { orderStatus: currentStatus as OrderStatus } }).unwrap();
+      toast.success("Order status updated");
+    } catch {
+      toast.error("Failed to update order status");
+    }
   };
 
   return (
@@ -45,7 +47,7 @@ function OrderDetailContent({ id }: { id: string }) {
               <h3 className="text-sm font-bold text-luxury-dark">Customer Information</h3>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <div><span className="text-luxury-muted">Name:</span> <span className="ml-1 font-medium text-luxury-dark">{order.customer}</span></div>
+              <div><span className="text-luxury-muted">Name:</span> <span className="ml-1 font-medium text-luxury-dark">{order.customerName}</span></div>
               <div><span className="text-luxury-muted">Email:</span> <span className="ml-1 font-medium text-luxury-dark">{order.email}</span></div>
               <div><span className="text-luxury-muted">Phone:</span> <span className="ml-1 font-medium text-luxury-dark">{order.phone}</span></div>
               <div><span className="text-luxury-muted">City:</span> <span className="ml-1 font-medium text-luxury-dark">{order.city}</span></div>
@@ -57,7 +59,7 @@ function OrderDetailContent({ id }: { id: string }) {
               <MapPin className="h-4 w-4 text-luxury-gold" />
               <h3 className="text-sm font-bold text-luxury-dark">Shipping Address</h3>
             </div>
-            <p className="text-sm text-luxury-secondary">{order.shippingAddress}</p>
+            <p className="text-sm text-luxury-secondary">{order.address}</p>
           </div>
 
           <div className="rounded-xl border border-luxury-border bg-white p-5">
@@ -68,14 +70,14 @@ function OrderDetailContent({ id }: { id: string }) {
             <div className="divide-y divide-luxury-border">
               {order.items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-luxury-muted-bg">
-                    <Image src={item.image} alt={item.name} fill className="object-cover" sizes="48px" />
+                  <div className="flex h-14 w-12 shrink-0 items-center justify-center rounded-lg bg-luxury-muted-bg text-xs font-bold text-luxury-muted">
+                    {item.productName.charAt(0)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-luxury-dark">{item.name}</p>
-                    <p className="text-[10px] text-luxury-muted">{item.variant} &middot; Qty {item.quantity}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-luxury-dark">{item.productName}</p>
+                    <p className="text-[10px] text-luxury-muted">Qty {item.quantity}</p>
                   </div>
-                  <span className="shrink-0 text-xs font-semibold text-luxury-dark">${(item.price * item.quantity).toLocaleString()}</span>
+                  <span className="shrink-0 text-xs font-semibold text-luxury-dark">${(Number(item.price) * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -96,11 +98,9 @@ function OrderDetailContent({ id }: { id: string }) {
           <div className="rounded-xl border border-luxury-border bg-white p-5">
             <h3 className="mb-3 text-sm font-bold text-luxury-dark">Order Summary</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-luxury-muted">Subtotal</span><span className="font-medium text-luxury-dark">${order.subtotal.toLocaleString()}</span></div>
-              {order.discount > 0 && <div className="flex justify-between"><span className="text-emerald-600">Discount</span><span className="font-medium text-emerald-600">-${order.discount.toLocaleString()}</span></div>}
-              <div className="flex justify-between"><span className="text-luxury-muted">Shipping</span><span className={cn("font-medium", order.shipping === 0 ? "text-emerald-600" : "text-luxury-dark")}>{order.shipping === 0 ? "Free" : `$${order.shipping}`}</span></div>
-              <div className="flex justify-between"><span className="text-luxury-muted">Tax</span><span className="font-medium text-luxury-dark">${order.tax.toLocaleString()}</span></div>
-              <div className="flex justify-between border-t border-luxury-border pt-2"><span className="font-bold text-luxury-dark">Total</span><span className="text-lg font-bold text-luxury-dark">${order.total.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-luxury-muted">Subtotal</span><span className="font-medium text-luxury-dark">${Number(order.subtotal).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-luxury-muted">Shipping</span><span className={cn("font-medium", Number(order.shipping) === 0 ? "text-emerald-600" : "text-luxury-dark")}>{Number(order.shipping) === 0 ? "Free" : `$${Number(order.shipping).toLocaleString()}`}</span></div>
+              <div className="flex justify-between border-t border-luxury-border pt-2"><span className="font-bold text-luxury-dark">Total</span><span className="text-lg font-bold text-luxury-dark">${Number(order.total).toLocaleString()}</span></div>
             </div>
           </div>
 
@@ -109,14 +109,14 @@ function OrderDetailContent({ id }: { id: string }) {
               <CreditCard className="h-4 w-4 text-luxury-gold" />
               <h3 className="text-sm font-bold text-luxury-dark">Payment</h3>
             </div>
-            <p className="text-sm text-luxury-secondary">{order.paymentMethod}</p>
+            <p className="text-sm capitalize text-luxury-secondary">{order.paymentMethod.replace("_", " ")}</p>
           </div>
 
           <div className="rounded-xl border border-luxury-border bg-white p-5">
             <h3 className="mb-3 text-sm font-bold text-luxury-dark">Update Status</h3>
             <select
-              value={status}
-              onChange={(e) => { setStatus(e.target.value as typeof status); setSaved(false); }}
+              value={currentStatus}
+              onChange={(e) => setStatus(e.target.value as OrderStatus)}
               className="w-full rounded-lg border border-luxury-border bg-white px-3 py-2.5 text-sm capitalize text-luxury-dark focus:border-luxury-gold focus:outline-none focus:ring-1 focus:ring-luxury-gold/30"
             >
               {allStatuses.map((s) => (
@@ -127,9 +127,10 @@ function OrderDetailContent({ id }: { id: string }) {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={handleSave}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-luxury-dark py-2.5 text-sm font-semibold text-white transition-colors hover:bg-luxury-gold"
+              disabled={updating}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-luxury-dark py-2.5 text-sm font-semibold text-white transition-colors hover:bg-luxury-gold disabled:opacity-60"
             >
-              {saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Changes"}
+              {updating ? "Saving..." : "Save Changes"}
             </motion.button>
           </div>
         </div>

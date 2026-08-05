@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopbar from "@/components/admin/AdminTopbar";
+import AdminAuthGuard from "@/components/admin/AdminAuthGuard";
 
 const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
@@ -26,12 +27,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#f8f8f7]">
-      <AdminSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div className="lg:ml-60">
-        <AdminTopbar title={getTitle(pathname)} onMenuClick={() => setMobileOpen(true)} />
-        <main className="p-4 lg:p-6">{children}</main>
+    <AdminAuthGuard>
+      <div className="min-h-screen bg-[#f8f8f7]">
+        <AdminSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+        <div className="lg:ml-60">
+          <AdminTopbar title={getTitle(pathname)} onMenuClick={() => setMobileOpen(true)} />
+          <main className="p-4 lg:p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </AdminAuthGuard>
   );
 }

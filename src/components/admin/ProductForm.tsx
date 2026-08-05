@@ -1,49 +1,113 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Check, ArrowLeft } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import LuxuryInput from "@/components/common/Input";
 import LuxuryTextarea from "@/components/common/Textarea";
 import { cn } from "@/lib/utils";
-import type { AdminProduct } from "@/data/admin";
+import { useCreateProductMutation, useUpdateProductMutation } from "@/redux/dashboard/apis/products";
+import { useGetCategoriesQuery } from "@/redux/dashboard/apis/categories";
+import type { Product } from "@/types/admin/product";
+import type { EntityStatus } from "@/types/admin/common";
+
+const statusOptions: EntityStatus[] = ["active", "draft", "archived"];
+
+interface ProductFormValues {
+  name: string;
+  slug?: string;
+  description?: string;
+  price: number;
+  salePrice?: number;
+  stock: number;
+  status: EntityStatus;
+  featured: boolean;
+  categoryId: string;
+}
+
+const productFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().optional(),
+  description: z.string().optional(),
+  price: z.number().positive("Price must be positive"),
+  salePrice: z.number().positive().optional(),
+  stock: z.number().int().min(0, "Stock cannot be negative"),
+  status: z.enum(["active", "draft", "archived"]),
+  featured: z.boolean(),
+  categoryId: z.string().min(1, "Category is required"),
+});
 
 interface ProductFormProps {
-  initialData?: AdminProduct;
+  initialData?: Product;
   mode: "create" | "edit";
 }
 
-const categoryOptions = ["Living Room", "Bedroom", "Dining Room", "Office", "Outdoor"];
-const statusOptions = ["active", "draft", "archived"] as const;
-
 export default function ProductForm({ initialData, mode }: ProductFormProps) {
   const router = useRouter();
-  const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({
-    name: initialData?.name || "",
-    slug: initialData?.slug || "",
-    category: initialData?.category || categoryOptions[0],
-    price: initialData?.price?.toString() || "",
-    originalPrice: initialData?.originalPrice?.toString() || "",
-    stock: initialData?.stock?.toString() || "",
-    status: initialData?.status || "draft",
-    image: initialData?.image || "",
-    description: initialData?.description || "",
-    material: initialData?.material || "",
-    dimensions: initialData?.dimensions || "",
-    variants: initialData?.variants?.join(", ") || "",
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const [createProduct, { isLoading: creating }] = useCreateProductMutation();
+  const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+
+  const categories = categoriesData?.data || [];
+  const isSubmitting = creating || updating;
+
+  const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: "",
+      price: 0,
+      salePrice: undefined,
+      stock: 0,
+      status: "draft",
+      featured: false,
+      categoryId: "",
+    },
   });
 
-  const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name,
+        slug: initialData.slug,
+        description: initialData.description || "",
+        price: Number(initialData.price),
+        salePrice: initialData.salePrice ? Number(initialData.salePrice) : undefined,
+        stock: initialData.stock,
+        status: initialData.status,
+        featured: initialData.featured,
+        categoryId: initialData.categoryId,
+      });
+    }
+  }, [initialData, reset]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => {
+  const currentStatus = watch("status");
+
+  const onSubmit = async (data: ProductFormValues) => {
+    try {
+      const payload = {
+        ...data,
+        salePrice: data.salePrice && !isNaN(data.salePrice) ? data.salePrice : undefined,
+      };
+
+      if (mode === "create") {
+        await createProduct(payload).unwrap();
+        toast.success("Product created");
+      } else if (initialData) {
+        await updateProduct({ id: initialData.id, data: payload }).unwrap();
+        toast.success("Product updated");
+      }
       router.push("/admin/products");
-    }, 1000);
+    } catch {
+      toast.error(mode === "create" ? "Failed to create product" : "Failed to update product");
+    }
   };
 
   return (
@@ -52,18 +116,19 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         <ArrowLeft className="h-4 w-4" /> Back to Products
       </Link>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-6">
         <div className="rounded-xl border border-luxury-border bg-white p-5">
           <h3 className="mb-4 text-sm font-bold text-luxury-dark">Basic Information</h3>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <LuxuryInput label="Product Name" value={form.name} onChange={(e) => update("name", e.target.value)} />
-              <LuxuryInput label="Slug" value={form.slug} onChange={(e) => update("slug", e.target.value)} />
+              <div>
+                <LuxuryInput label="Product Name" {...register("name")} />
+                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+              </div>
+              <LuxuryInput label="Slug (auto-generated if empty)" {...register("slug")} />
             </div>
-            <LuxuryTextarea label="Description" value={form.description} onChange={(e) => update("description", e.target.value)} rows={4} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <LuxuryInput label="Material" value={form.material} onChange={(e) => update("material", e.target.value)} />
-              <LuxuryInput label="Dimensions" value={form.dimensions} onChange={(e) => update("dimensions", e.target.value)} />
+            <div>
+              <LuxuryTextarea label="Description" {...register("description")} rows={4} />
             </div>
           </div>
         </div>
@@ -72,9 +137,15 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
           <div className="rounded-xl border border-luxury-border bg-white p-5">
             <h3 className="mb-4 text-sm font-bold text-luxury-dark">Pricing & Inventory</h3>
             <div className="space-y-4">
-              <LuxuryInput label="Price ($)" type="number" value={form.price} onChange={(e) => update("price", e.target.value)} />
-              <LuxuryInput label="Compare at Price ($)" type="number" value={form.originalPrice} onChange={(e) => update("originalPrice", e.target.value)} />
-              <LuxuryInput label="Stock Quantity" type="number" value={form.stock} onChange={(e) => update("stock", e.target.value)} />
+              <div>
+                <LuxuryInput label="Price ($)" type="number" step="0.01" {...register("price", { valueAsNumber: true })} />
+                {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+              </div>
+              <LuxuryInput label="Sale Price ($)" type="number" step="0.01" {...register("salePrice", { valueAsNumber: true })} />
+              <div>
+                <LuxuryInput label="Stock Quantity" type="number" {...register("stock", { valueAsNumber: true })} />
+                {errors.stock && <p className="mt-1 text-xs text-red-500">{errors.stock.message}</p>}
+              </div>
             </div>
           </div>
 
@@ -84,12 +155,13 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
               <div>
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-luxury-dark">Category</label>
                 <select
-                  value={form.category}
-                  onChange={(e) => update("category", e.target.value)}
+                  {...register("categoryId")}
                   className="w-full rounded-lg border border-luxury-border bg-white px-4 py-3 text-sm text-luxury-dark focus:border-luxury-gold focus:outline-none focus:ring-1 focus:ring-luxury-gold/30"
                 >
-                  {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+                  <option value="">Select category</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
+                {errors.categoryId && <p className="mt-1 text-xs text-red-500">{errors.categoryId.message}</p>}
               </div>
               <div>
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-luxury-dark">Status</label>
@@ -98,10 +170,10 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                     <button
                       key={s}
                       type="button"
-                      onClick={() => update("status", s)}
+                      onClick={() => setValue("status", s)}
                       className={cn(
                         "rounded-lg px-4 py-2 text-xs font-semibold capitalize transition-colors",
-                        form.status === s ? "bg-luxury-dark text-white" : "border border-luxury-border text-luxury-text hover:border-luxury-dark"
+                        currentStatus === s ? "bg-luxury-dark text-white" : "border border-luxury-border text-luxury-text hover:border-luxury-dark"
                       )}
                     >
                       {s}
@@ -109,16 +181,11 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                   ))}
                 </div>
               </div>
-              <LuxuryInput label="Variants (comma separated)" value={form.variants} onChange={(e) => update("variants", e.target.value)} placeholder="e.g. Cognac, Black, Tan" />
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="featured" {...register("featured")} className="h-4 w-4 rounded border-luxury-border text-luxury-gold focus:ring-luxury-gold/30" />
+                <label htmlFor="featured" className="text-xs font-semibold text-luxury-dark">Featured Product</label>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-luxury-border bg-white p-5">
-          <h3 className="mb-4 text-sm font-bold text-luxury-dark">Images</h3>
-          <div className="space-y-4">
-            <LuxuryInput label="Main Image URL" value={form.image} onChange={(e) => update("image", e.target.value)} placeholder="https://..." />
-            <p className="text-xs text-luxury-muted">Gallery image upload will be available in V2.</p>
           </div>
         </div>
 
@@ -127,10 +194,10 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             type="submit"
-            disabled={saved}
+            disabled={isSubmitting}
             className="inline-flex items-center gap-2 rounded-lg bg-luxury-dark px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-luxury-gold disabled:opacity-60"
           >
-            {saved ? <><Check className="h-4 w-4" /> Saved!</> : mode === "create" ? "Create Product" : "Update Product"}
+            {isSubmitting ? "Saving..." : mode === "create" ? "Create Product" : "Update Product"}
           </motion.button>
           <Link href="/admin/products" className="rounded-lg border border-luxury-border px-6 py-3 text-sm font-semibold text-luxury-text hover:border-luxury-dark">
             Cancel

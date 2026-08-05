@@ -1,39 +1,35 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Eye, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminOrders } from "@/data/admin";
+import { useGetOrdersQuery } from "@/redux/dashboard/apis/orders";
+import { orderStatusStyles, type OrderStatus } from "@/types/admin/common";
+import AdminTableSkeleton from "@/components/admin/AdminTableSkeleton";
+import AdminPagination from "@/components/admin/AdminPagination";
+import AdminErrorState from "@/components/admin/AdminErrorState";
+import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 
-const statusOptions = ["All", "pending", "processing", "shipped", "delivered", "cancelled"];
-const statusStyles: Record<string, { bg: string; text: string }> = {
-  pending: { bg: "bg-amber-50", text: "text-amber-700" },
-  processing: { bg: "bg-blue-50", text: "text-blue-700" },
-  shipped: { bg: "bg-indigo-50", text: "text-indigo-700" },
-  delivered: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  cancelled: { bg: "bg-red-50", text: "text-red-700" },
-};
+const statusOptions: (OrderStatus | "All")[] = ["All", "pending", "processing", "shipped", "delivered", "cancelled"];
 
 export default function OrdersPage() {
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    let list = adminOrders;
-    if (statusFilter !== "All") list = list.filter((o) => o.status === statusFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (o) =>
-          o.id.toLowerCase().includes(q) ||
-          o.customer.toLowerCase().includes(q) ||
-          o.city.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [statusFilter, search]);
+  const { data, isLoading, isFetching, error, refetch } = useGetOrdersQuery({
+    page,
+    limit: 20,
+    search: search.trim() || undefined,
+    status: statusFilter !== "All" ? statusFilter : undefined,
+  });
+
+  const orders = data?.data || [];
+  const pagination = data?.pagination;
+
+  if (error) return <AdminErrorState message="Failed to load orders" onRetry={refetch} />;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -43,7 +39,7 @@ export default function OrdersPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search orders..."
             className="w-40 bg-transparent text-sm text-luxury-dark outline-none placeholder:text-luxury-muted sm:w-56"
           />
@@ -52,7 +48,7 @@ export default function OrdersPage() {
           {statusOptions.map((s) => (
             <button
               key={s}
-              onClick={() => setStatusFilter(s)}
+              onClick={() => { setStatusFilter(s); setPage(1); }}
               className={cn(
                 "rounded-full px-3 py-1.5 text-[11px] font-semibold capitalize transition-colors",
                 statusFilter === s
@@ -66,59 +62,52 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-luxury-border bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-luxury-border bg-luxury-muted-bg/30">
-                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Order ID</th>
-                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Customer</th>
-                <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted sm:table-cell">Phone</th>
-                <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted md:table-cell">City</th>
-                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Total</th>
-                <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted lg:table-cell">Payment</th>
-                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Status</th>
-                <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted md:table-cell">Date</th>
-                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-luxury-border">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-5 py-10 text-center text-sm text-luxury-muted">
-                    No orders found.
-                  </td>
+      {isLoading ? (
+        <AdminTableSkeleton rows={8} columns={9} />
+      ) : (
+        <div className={cn("overflow-hidden rounded-xl border border-luxury-border bg-white", isFetching && "opacity-60")}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-luxury-border bg-luxury-muted-bg/30">
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Order ID</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Customer</th>
+                  <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted sm:table-cell">Phone</th>
+                  <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted md:table-cell">City</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Total</th>
+                  <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted lg:table-cell">Payment</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted">Status</th>
+                  <th className="hidden px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted md:table-cell">Date</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-luxury-muted" />
                 </tr>
-              ) : (
-                filtered.map((order) => {
-                  const s = statusStyles[order.status];
-                  return (
+              </thead>
+              <tbody className="divide-y divide-luxury-border">
+                {orders.length === 0 ? (
+                  <tr><td colSpan={9} className="px-5 py-10 text-center text-sm text-luxury-muted">No orders found.</td></tr>
+                ) : (
+                  orders.map((order) => (
                     <tr key={order.id} className="transition-colors hover:bg-luxury-muted-bg/20">
-                      <td className="whitespace-nowrap px-5 py-3 text-xs font-medium text-luxury-dark">{order.id}</td>
-                      <td className="whitespace-nowrap px-5 py-3 text-xs text-luxury-secondary">{order.customer}</td>
+                      <td className="whitespace-nowrap px-5 py-3 text-xs font-medium text-luxury-dark">{order.orderNumber}</td>
+                      <td className="whitespace-nowrap px-5 py-3 text-xs text-luxury-secondary">{order.customerName}</td>
                       <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted sm:table-cell">{order.phone}</td>
                       <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted md:table-cell">{order.city}</td>
-                      <td className="whitespace-nowrap px-5 py-3 text-xs font-semibold text-luxury-dark">${order.total.toLocaleString()}</td>
-                      <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted lg:table-cell">{order.paymentMethod}</td>
-                      <td className="whitespace-nowrap px-5 py-3">
-                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize", s.bg, s.text)}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted md:table-cell">{order.date}</td>
+                      <td className="whitespace-nowrap px-5 py-3 text-xs font-semibold text-luxury-dark">${Number(order.total).toLocaleString()}</td>
+                      <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted capitalize lg:table-cell">{order.paymentMethod.replace("_", " ")}</td>
+                      <td className="whitespace-nowrap px-5 py-3"><AdminStatusBadge status={order.orderStatus} styles={orderStatusStyles} /></td>
+                      <td className="hidden whitespace-nowrap px-5 py-3 text-xs text-luxury-muted md:table-cell">{new Date(order.createdAt).toLocaleDateString()}</td>
                       <td className="px-5 py-3">
-                        <Link href={`/admin/orders/${order.id}`} className="text-luxury-muted hover:text-luxury-gold">
-                          <Eye className="h-3.5 w-3.5" />
-                        </Link>
+                        <Link href={`/admin/orders/${order.id}`} className="text-luxury-muted hover:text-luxury-gold"><Eye className="h-3.5 w-3.5" /></Link>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {pagination && <AdminPagination pagination={pagination} onPageChange={setPage} loading={isFetching} />}
     </motion.div>
   );
 }

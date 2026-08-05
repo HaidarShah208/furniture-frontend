@@ -1,29 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useLoginMutation } from "@/redux/dashboard/apis/auth";
+import { setAuthCookie, isAuthenticated } from "@/redux/middleware/auth";
+import type { LoginRequest } from "@/types/admin/auth";
+
+const loginSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!email || !password) {
-      setError("Please enter email and password.");
-      return;
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace("/admin/dashboard");
     }
-    setLoading(true);
-    setTimeout(() => {
-      router.push("/admin/dashboard");
-    }, 800);
+  }, [router]);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const onSubmit = async (data: LoginRequest) => {
+    try {
+      const result = await login(data).unwrap();
+      if (result.success) {
+        setAuthCookie(result.data.token);
+        toast.success("Welcome back!");
+        router.push("/admin/dashboard");
+      }
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || "Invalid email or password");
+    }
   };
 
   return (
@@ -42,18 +64,18 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl border border-luxury-border bg-white p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-luxury-dark">
                 Email
               </label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@luxe-furniture.com"
+                {...register("email")}
+                placeholder="admin@example.com"
                 className="w-full rounded-lg border border-luxury-border bg-white px-4 py-3 text-sm text-luxury-dark transition-all duration-200 placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none focus:ring-1 focus:ring-luxury-gold/30"
               />
+              {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
             </div>
 
             <div>
@@ -63,8 +85,7 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password")}
                   placeholder="••••••••"
                   className="w-full rounded-lg border border-luxury-border bg-white px-4 py-3 pr-10 text-sm text-luxury-dark transition-all duration-200 placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none focus:ring-1 focus:ring-luxury-gold/30"
                 />
@@ -76,18 +97,17 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
             </div>
-
-            {error && <p className="text-xs text-red-500">{error}</p>}
 
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-luxury-dark py-3 text-sm font-semibold text-white transition-colors hover:bg-luxury-gold disabled:opacity-60"
             >
-              {loading ? (
+              {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               ) : (
                 <>
@@ -100,7 +120,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-4 text-center text-[11px] text-luxury-muted">
-          Demo: use any email and password
+          admin@example.com / Admin@123
         </p>
       </motion.div>
     </div>

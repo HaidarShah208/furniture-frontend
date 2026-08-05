@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { removeAuthCookie } from "@/redux/middleware/auth";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -71,13 +72,16 @@ function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
       </nav>
 
       <div className="border-t border-luxury-border px-3 py-4">
-        <Link
-          href="/login"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-luxury-muted transition-colors hover:text-red-500"
+        <button
+          onClick={() => {
+            removeAuthCookie();
+            window.location.href = "/login";
+          }}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-luxury-muted transition-colors hover:text-red-500"
         >
           <LogOut className="h-4 w-4" />
           Logout
-        </Link>
+        </button>
       </div>
     </div>
   );

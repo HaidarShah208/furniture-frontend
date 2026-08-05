@@ -2,27 +2,20 @@
 
 import { use } from "react";
 import ProductForm from "@/components/admin/ProductForm";
-import { getAdminProductById } from "@/data/admin";
-import Link from "next/link";
+import AdminFormSkeleton from "@/components/admin/AdminFormSkeleton";
+import AdminErrorState from "@/components/admin/AdminErrorState";
+import { useGetProductByIdQuery } from "@/redux/dashboard/apis/products";
 
-function EditContent({ id }: { id: string }) {
-  const product = getAdminProductById(id);
+function EditProductContent({ id }: { id: string }) {
+  const { data, isLoading, error, refetch } = useGetProductByIdQuery(id);
 
-  if (!product) {
-    return (
-      <div className="flex flex-col items-center py-20 text-center">
-        <h2 className="mb-2 text-lg font-bold text-luxury-dark">Product not found</h2>
-        <Link href="/admin/products" className="mt-4 text-sm font-semibold text-luxury-gold hover:text-luxury-gold-hover">
-          &larr; Back to Products
-        </Link>
-      </div>
-    );
-  }
+  if (isLoading) return <AdminFormSkeleton />;
+  if (error || !data?.data) return <AdminErrorState message="Product not found" onRetry={refetch} />;
 
-  return <ProductForm mode="edit" initialData={product} />;
+  return <ProductForm mode="edit" initialData={data.data} />;
 }
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  return <EditContent id={id} />;
+  return <EditProductContent id={id} />;
 }

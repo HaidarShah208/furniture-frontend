@@ -4,6 +4,8 @@ import { LanguageProvider } from "@/hooks/useLanguage";
 import { CartProvider } from "@/hooks/useCart";
 import { WishlistProvider } from "@/hooks/useWishlist";
 import { CompareProvider } from "@/hooks/useCompare";
+import { ReduxProvider } from "@/redux/provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -38,15 +40,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <LanguageProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <CompareProvider>
-                {children}
-              </CompareProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </LanguageProvider>
+        <ReduxProvider>
+          <LanguageProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <CompareProvider>
+                  {children}
+                  <Toaster position="top-right" richColors closeButton />
+                </CompareProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </LanguageProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
