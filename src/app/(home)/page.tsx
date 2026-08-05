@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { LanguageProvider, useLanguage } from "@/hooks/useLanguage";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 import ScrollProgress from "@/components/common/ScrollProgress";
 import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
@@ -11,7 +10,7 @@ import BrandPhilosophy from "@/components/home/BrandPhilosophy";
 import FeaturedCollections from "@/components/home/FeaturedCollections";
 import ShopByRoom from "@/components/home/ShopByRoom";
 import Categories from "@/components/home/Categories";
-import BestSellers from "@/components/home/BestSellers";
+import BestSellers from "@/components/home/BestSellers";  
 import NewArrivals from "@/components/home/NewArrivals";
 import Craftsmanship from "@/components/home/Craftsmanship";
 import Materials from "@/components/home/Materials";
@@ -35,7 +34,6 @@ function HomeContent() {
 
   return (
     <main dir={direction}>
-      <AnnouncementBar />
       <ScrollProgress />
       <Navbar />
       <Hero />

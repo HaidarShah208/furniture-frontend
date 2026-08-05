@@ -2,7 +2,6 @@
 
 import { useState, useMemo, use } from "react";
 import { LanguageProvider } from "@/hooks/useLanguage";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 import ScrollProgress from "@/components/common/ScrollProgress";
 import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
@@ -157,7 +156,6 @@ function CategoryDetailContent({ slug }: { slug: string }) {
 
   return (
     <main>
-      <AnnouncementBar />
       <ScrollProgress />
       <Navbar />
       <CategoryHeroBanner

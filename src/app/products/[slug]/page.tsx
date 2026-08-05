@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Container from "@/components/common/Container";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 import ScrollProgress from "@/components/common/ScrollProgress";
 import BackToTop from "@/components/common/BackToTop";
 import Breadcrumb from "@/components/product/Breadcrumb";
@@ -68,7 +67,6 @@ function ProductDetailContent({ slug }: { slug: string }) {
   if (!product) {
     return (
       <main>
-        <AnnouncementBar />
         <Navbar />
         <section className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
@@ -83,7 +81,6 @@ function ProductDetailContent({ slug }: { slug: string }) {
 
   return (
     <main>
-      <AnnouncementBar />
       <ScrollProgress />
       <Navbar />
 

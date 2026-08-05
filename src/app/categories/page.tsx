@@ -1,7 +1,6 @@
 "use client";
 
 import { LanguageProvider } from "@/hooks/useLanguage";
-import AnnouncementBar from "@/components/common/AnnouncementBar";
 import ScrollProgress from "@/components/common/ScrollProgress";
 import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
@@ -19,7 +18,6 @@ import { categories } from "@/data/categories";
 function CategoriesContent() {
   return (
     <main>
-      <AnnouncementBar />
       <ScrollProgress />
       <Navbar />
       <CategoriesHero />
