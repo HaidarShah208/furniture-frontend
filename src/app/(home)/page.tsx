@@ -13,13 +13,10 @@ import Categories from "@/components/home/Categories";
 import BestSellers from "@/components/home/BestSellers";  
 import NewArrivals from "@/components/home/NewArrivals";
 import Craftsmanship from "@/components/home/Craftsmanship";
-import Materials from "@/components/home/Materials";
 import Customization from "@/components/home/Customization";
 import InteriorProjects from "@/components/home/InteriorProjects";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import Testimonials from "@/components/home/Testimonials";
-import InstagramGallery from "@/components/home/InstagramGallery";
-import Blogs from "@/components/home/Blogs";
 import FAQ from "@/components/home/FAQ";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/common/Footer";
@@ -44,13 +41,10 @@ function HomeContent() {
       <BestSellers />
       <NewArrivals />
       <Craftsmanship />
-      <Materials />
       <Customization />
       <InteriorProjects />
       <WhyChooseUs />
       <Testimonials />
-      <InstagramGallery />
-      <Blogs />
       <FAQ />
       <Newsletter />
       <Footer />

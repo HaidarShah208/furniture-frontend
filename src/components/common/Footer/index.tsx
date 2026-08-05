@@ -28,53 +28,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-luxury-dark" dir={direction}>
-      <div className="border-b border-white/8">
-        <Container className="py-16">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="mb-2 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-luxury-gold">
-                {t("newsletter.subtitle")}
-              </span>
-              <h3 className="mb-2 text-2xl font-bold text-white">
-                {t("newsletter.title")}
-              </h3>
-              <p className="text-sm leading-relaxed text-white/50">
-                {t("newsletter.description")}
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <form
-                onSubmit={(e) => e.preventDefault()}
-                className="flex gap-3"
-              >
-                <div className="flex-1">
-                  <LuxuryInput
-                    type="email"
-                    placeholder={t("newsletter.placeholder")}
-                    className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-luxury-gold"
-                  />
-                </div>
-                <AnimatedButton variant="gold" size="md" type="submit">
-                  {t("newsletter.button")}
-                </AnimatedButton>
-              </form>
-              <p className="mt-3 text-xs text-white/30">
-                {t("newsletter.privacy")}
-              </p>
-            </motion.div>
-          </div>
-        </Container>
-      </div>
+      
 
       <Container className="pt-16 pb-8">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
