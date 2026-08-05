@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { LanguageProvider } from "@/hooks/useLanguage";
+import { CartProvider } from "@/hooks/useCart";
+import { WishlistProvider } from "@/hooks/useWishlist";
+import { CompareProvider } from "@/hooks/useCompare";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -33,7 +37,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <LanguageProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <CompareProvider>
+                {children}
+              </CompareProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </LanguageProvider>
+      </body>
     </html>
   );
 }

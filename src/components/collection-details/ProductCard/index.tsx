@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Eye, GitCompare, Star, ArrowRight } from "lucide-react";
 import Badge from "@/components/common/Badge";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCompare } from "@/hooks/useCompare";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
 
@@ -17,6 +19,10 @@ interface PLPProductCardProps {
 
 export default function PLPProductCard({ product, index, onQuickView }: PLPProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleItem: toggleCompare, isInCompare } = useCompare();
+  const wishlisted = isInWishlist(product.id);
+  const compared = isInCompare(product.id);
   const secondImage = product.images.length > 1 ? product.images[1].src : null;
 
   const colorVariant = product.variants.find(
@@ -34,8 +40,8 @@ export default function PLPProductCard({ product, index, onQuickView }: PLPProdu
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="group overflow-hidden rounded-2xl border border-luxury-border bg-white transition-all duration-500 luxury-shadow hover:border-luxury-gold/40 hover:luxury-shadow-hover">
-        <Link href={`/categories/${product.slug}`} className="block">
-          <div className="relative aspect-[4/5] overflow-hidden">
+        <Link href={`/products/${product.slug}`} className="block">
+          <div className="relative aspect-4/5 overflow-hidden">
             <Image
               src={product.image}
               alt={product.name}
@@ -74,11 +80,16 @@ export default function PLPProductCard({ product, index, onQuickView }: PLPProdu
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.preventDefault(); }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-luxury-text backdrop-blur-sm transition-colors hover:bg-luxury-gold hover:text-white"
-                aria-label="Add to wishlist"
+                onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-colors",
+                  wishlisted
+                    ? "bg-luxury-gold text-white"
+                    : "bg-white/90 text-luxury-text hover:bg-luxury-gold hover:text-white"
+                )}
+                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <Heart className="h-4 w-4" />
+                <Heart className={cn("h-4 w-4", wishlisted && "fill-white")} />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -95,16 +106,21 @@ export default function PLPProductCard({ product, index, onQuickView }: PLPProdu
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.preventDefault(); }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-luxury-text backdrop-blur-sm transition-colors hover:bg-luxury-gold hover:text-white"
-                aria-label="Compare"
+                onClick={(e) => { e.preventDefault(); toggleCompare(product); }}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-colors",
+                  compared
+                    ? "bg-luxury-gold text-white"
+                    : "bg-white/90 text-luxury-text hover:bg-luxury-gold hover:text-white"
+                )}
+                aria-label={compared ? "Remove from compare" : "Add to compare"}
               >
                 <GitCompare className="h-4 w-4" />
               </motion.button>
             </div>
 
             <div className={cn(
-              "absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent p-4 transition-all duration-500",
+              "absolute bottom-0 left-0 right-0 z-10 bg-linear-to-t from-black/50 to-transparent p-4 transition-all duration-500",
               isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
             )}>
               <span className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-luxury-dark/90 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-luxury-gold">
@@ -119,7 +135,7 @@ export default function PLPProductCard({ product, index, onQuickView }: PLPProdu
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-luxury-gold">
             {product.collection}
           </span>
-          <Link href={`/categories/${product.slug}`}>
+          <Link href={`/products/${product.slug}`}>
             <h3 className="mb-1 text-sm font-bold tracking-tight text-luxury-dark transition-colors duration-300 group-hover:text-luxury-gold">
               {product.name}
             </h3>
@@ -161,15 +177,31 @@ export default function PLPProductCard({ product, index, onQuickView }: PLPProdu
             </div>
           )}
 
-          <div className="flex items-center gap-2 border-t border-luxury-border pt-3">
-            <span className="text-base font-bold text-luxury-dark">
-              ${product.price.toLocaleString()}
-            </span>
-            {product.originalPrice && (
-              <span className="text-sm text-luxury-muted line-through">
-                ${product.originalPrice.toLocaleString()}
+          <div className="flex items-center justify-between border-t border-luxury-border pt-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold text-luxury-dark">
+                ${product.price.toLocaleString()}
               </span>
-            )}
+              {product.originalPrice && (
+                <span className="text-sm text-luxury-muted line-through">
+                  ${product.originalPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
+            <span className={cn(
+              "text-[11px] font-medium",
+              product.availability === "in-stock"
+                ? "text-emerald-600"
+                : product.availability === "pre-order"
+                  ? "text-amber-600"
+                  : "text-red-500"
+            )}>
+              {product.availability === "in-stock"
+                ? "In Stock"
+                : product.availability === "pre-order"
+                  ? "Pre-Order"
+                  : "Sold Out"}
+            </span>
           </div>
         </div>
       </div>

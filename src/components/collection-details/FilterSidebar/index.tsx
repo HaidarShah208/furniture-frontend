@@ -165,6 +165,21 @@ export default function FilterSidebar({
         )}
       </div>
 
+      <FilterAccordion title="Category" defaultOpen>
+        <RadioList
+          options={[
+            { id: "living-room", label: "Living Room", count: 64 },
+            { id: "bedroom", label: "Bedroom", count: 42 },
+            { id: "dining", label: "Dining Room", count: 38 },
+            { id: "office", label: "Home Office", count: 26 },
+            { id: "outdoor", label: "Outdoor", count: 18 },
+            { id: "lighting", label: "Lighting", count: 42 },
+          ]}
+          selected={filters.collection}
+          onChange={(v) => update("collection", v)}
+        />
+      </FilterAccordion>
+
       <FilterAccordion title="Price Range" defaultOpen>
         <div className="space-y-3 px-0.5">
           <input

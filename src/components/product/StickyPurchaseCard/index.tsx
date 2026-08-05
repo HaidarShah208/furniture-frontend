@@ -2,24 +2,39 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Minus, Plus, ShoppingBag, Zap, Lock } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Zap, Lock, Check } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
+import type { Product } from "@/types/product";
 
 interface StickyPurchaseCardProps {
+  product: Product;
   price: number;
   originalPrice?: number;
   availability: string;
   estimatedDelivery: string;
+  variant?: string;
 }
 
 export default function StickyPurchaseCard({
+  product,
   price,
   originalPrice,
   availability,
   estimatedDelivery,
+  variant = "",
 }: StickyPurchaseCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
+  const { addItem, isInCart } = useCart();
   const isAvailable = availability !== "out-of-stock";
+  const alreadyInCart = isInCart(product.id);
+
+  const handleAddToCart = () => {
+    addItem(product, quantity, variant);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2000);
+  };
 
   return (
     <motion.div
@@ -74,21 +89,34 @@ export default function StickyPurchaseCard({
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           disabled={!isAvailable}
+          onClick={handleAddToCart}
           className={cn(
             "flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold tracking-wide transition-all duration-500",
-            isAvailable
-              ? "bg-luxury-dark text-white hover:bg-luxury-gold"
-              : "cursor-not-allowed bg-luxury-border text-luxury-muted"
+            justAdded
+              ? "bg-emerald-600 text-white"
+              : isAvailable
+                ? "bg-luxury-dark text-white hover:bg-luxury-gold"
+                : "cursor-not-allowed bg-luxury-border text-luxury-muted"
           )}
         >
-          <ShoppingBag className="h-4 w-4" />
-          {isAvailable ? "Add to Cart" : "Out of Stock"}
+          {justAdded ? (
+            <>
+              <Check className="h-4 w-4" />
+              Added to Cart
+            </>
+          ) : (
+            <>
+              <ShoppingBag className="h-4 w-4" />
+              {isAvailable ? (alreadyInCart ? "Add More" : "Add to Cart") : "Out of Stock"}
+            </>
+          )}
         </motion.button>
 
         {isAvailable && (
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
+            onClick={handleAddToCart}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-luxury-gold px-6 py-3.5 text-sm font-semibold tracking-wide text-white transition-all duration-500 hover:bg-luxury-gold-hover"
           >
             <Zap className="h-4 w-4" />

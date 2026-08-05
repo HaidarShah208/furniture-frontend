@@ -85,3 +85,85 @@ export interface AccordionItemData {
   title: string;
   content: string | string[];
 }
+
+export interface SectionProps {
+  children: React.ReactNode;
+  className?: string;
+  size?: "sm" | "md" | "lg" | "xl";
+  id?: string;
+}
+
+export interface PageWrapperProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export interface ContentWrapperProps {
+  children: React.ReactNode;
+  className?: string;
+  maxWidth?: "sm" | "md" | "default" | "lg" | "full";
+}
+
+export interface LuxuryInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  icon?: React.ReactNode;
+}
+
+export interface LuxuryTextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  error?: string;
+}
+
+export interface LuxurySelectProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  error?: string;
+  className?: string;
+}
+
+export interface DrawerProps {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  side?: "left" | "right";
+  title?: string;
+  className?: string;
+}
+
+export interface DialogProps {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+export interface TooltipProps {
+  children: React.ReactNode;
+  content: string;
+  side?: "top" | "bottom" | "left" | "right";
+}
+
+export interface SkeletonProps {
+  className?: string;
+  rounded?: "sm" | "md" | "lg" | "full";
+}
+
+export interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}
+
+export interface LoadingStateProps {
+  text?: string;
+  size?: "sm" | "md" | "lg";
+}

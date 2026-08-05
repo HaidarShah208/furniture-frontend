@@ -2,44 +2,99 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { MapPin, Phone, Mail, ArrowUp } from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import Container from "@/components/common/Container";
+import LuxuryInput from "@/components/common/Input";
+import AnimatedButton from "@/components/common/AnimatedButton";
 
 const socialLinks = [
-  { name: "Facebook", href: "#" },
-  { name: "Instagram", href: "#" },
-  { name: "Twitter", href: "#" },
-  { name: "Pinterest", href: "#" },
+  { name: "Facebook", initial: "Fb", href: "#" },
+  { name: "Instagram", initial: "Ig", href: "#" },
+  { name: "Twitter", initial: "Tw", href: "#" },
+  { name: "Pinterest", initial: "Pt", href: "#" },
+];
+
+const collectionLinks = [
+  { label: "Modern Minimalist", href: "/collections/modern-minimalist" },
+  { label: "Classic Heritage", href: "/collections/classic-heritage" },
+  { label: "Urban Luxe", href: "/collections/urban-luxe" },
+  { label: "Coastal Retreat", href: "/collections/coastal-retreat" },
+  { label: "Japandi Harmony", href: "/collections/japandi-harmony" },
 ];
 
 export default function Footer() {
   const { t, direction } = useLanguage();
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
-    <footer className="bg-luxury-dark pt-20 pb-8" dir={direction}>
-      <Container>
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-luxury-dark" dir={direction}>
+      <div className="border-b border-white/8">
+        <Container className="py-16">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="mb-2 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-luxury-gold">
+                {t("newsletter.subtitle")}
+              </span>
+              <h3 className="mb-2 text-2xl font-bold text-white">
+                {t("newsletter.title")}
+              </h3>
+              <p className="text-sm leading-relaxed text-white/50">
+                {t("newsletter.description")}
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <form
+                onSubmit={(e) => e.preventDefault()}
+                className="flex gap-3"
+              >
+                <div className="flex-1">
+                  <LuxuryInput
+                    type="email"
+                    placeholder={t("newsletter.placeholder")}
+                    className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-luxury-gold"
+                  />
+                </div>
+                <AnimatedButton variant="gold" size="md" type="submit">
+                  {t("newsletter.button")}
+                </AnimatedButton>
+              </form>
+              <p className="mt-3 text-xs text-white/30">
+                {t("newsletter.privacy")}
+              </p>
+            </motion.div>
+          </div>
+        </Container>
+      </div>
+
+      <Container className="pt-16 pb-8">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
+            className="lg:col-span-2"
           >
             <Link
               href="/"
-              className="mb-6 inline-block text-2xl font-bold tracking-[0.15em] text-white"
+              className="mb-5 inline-block text-2xl font-bold tracking-[0.15em] text-white"
             >
               LUXE
             </Link>
-            <p className="mb-6 text-sm leading-relaxed text-white/50">
+            <p className="mb-6 max-w-sm text-sm leading-relaxed text-white/50">
               {t("footer.description")}
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
@@ -47,7 +102,7 @@ export default function Footer() {
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xs font-bold text-white/50 transition-all duration-300 hover:border-luxury-gold hover:text-luxury-gold"
                   aria-label={social.name}
                 >
-                  {social.name.charAt(0)}
+                  {social.initial}
                 </a>
               ))}
             </div>
@@ -59,15 +114,15 @@ export default function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-wider text-white">
               {t("footer.quickLinks")}
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {["home", "collections", "categories", "about", "contact"].map(
                 (key) => (
                   <li key={key}>
                     <Link
-                      href={`#${key}`}
+                      href={key === "home" ? "/" : key === "collections" ? "/collections" : key === "categories" ? "/categories" : `#${key}`}
                       className="text-sm text-white/50 transition-colors duration-300 hover:text-luxury-gold"
                     >
                       {t(`nav.${key}`)}
@@ -82,24 +137,22 @@ export default function Footer() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
           >
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
-              {t("footer.customerCare")}
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-wider text-white">
+              Collections
             </h4>
-            <ul className="space-y-3">
-              {["contactUs", "faq", "shipping", "warranty", "careGuide"].map(
-                (key) => (
-                  <li key={key}>
-                    <Link
-                      href="#"
-                      className="text-sm text-white/50 transition-colors duration-300 hover:text-luxury-gold"
-                    >
-                      {t(`footer.${key}`)}
-                    </Link>
-                  </li>
-                )
-              )}
+            <ul className="space-y-2.5">
+              {collectionLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-white/50 transition-colors duration-300 hover:text-luxury-gold"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </motion.div>
 
@@ -107,9 +160,9 @@ export default function Footer() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-wider text-white">
               {t("footer.getInTouch")}
             </h4>
             <ul className="space-y-4">
@@ -141,7 +194,7 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/8 pt-8 sm:flex-row">
           <p className="text-xs text-white/30">{t("footer.copyright")}</p>
           <div className="flex items-center gap-6">
             <Link
@@ -159,16 +212,6 @@ export default function Footer() {
           </div>
         </div>
       </Container>
-
-      <motion.button
-        onClick={scrollToTop}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-luxury-gold text-white shadow-lg transition-colors duration-300 hover:bg-luxury-gold-hover"
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="h-5 w-5" />
-      </motion.button>
     </footer>
   );
 }

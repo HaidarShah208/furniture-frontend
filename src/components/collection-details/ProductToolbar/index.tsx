@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Grid3X3, LayoutGrid, SlidersHorizontal } from "lucide-react";
+import { Grid3X3, LayoutGrid, Search, SlidersHorizontal } from "lucide-react";
 import SortDropdown from "@/components/collection-details/SortDropdown";
 import { cn } from "@/lib/utils";
 import type { SortOption } from "@/types/sort";
@@ -14,6 +14,8 @@ interface ProductToolbarProps {
   onGridChange: (cols: 3 | 4) => void;
   onToggleFilters: () => void;
   filtersVisible: boolean;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export default function ProductToolbar({
@@ -24,6 +26,8 @@ export default function ProductToolbar({
   onGridChange,
   onToggleFilters,
   filtersVisible,
+  searchQuery = "",
+  onSearchChange,
 }: ProductToolbarProps) {
   return (
     <motion.div
@@ -45,13 +49,25 @@ export default function ProductToolbar({
           <SlidersHorizontal className="h-4 w-4" />
           Filters
         </button>
-        <span className="text-sm text-luxury-muted">
+        <span className="hidden text-sm text-luxury-muted sm:inline">
           <span className="font-semibold text-luxury-dark">{totalProducts}</span>{" "}
           {totalProducts === 1 ? "product" : "products"}
         </span>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-1 items-center justify-end gap-3">
+        {onSearchChange && (
+          <div className="relative hidden w-full max-w-xs md:block">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-luxury-muted" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search products..."
+              className="w-full rounded-lg border border-luxury-border bg-white py-2 pl-9 pr-4 text-sm text-luxury-dark transition-all duration-300 placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none focus:ring-1 focus:ring-luxury-gold/30"
+            />
+          </div>
+        )}
         <div className="hidden items-center gap-1 rounded-lg border border-luxury-border p-0.5 lg:flex">
           <button
             onClick={() => onGridChange(3)}

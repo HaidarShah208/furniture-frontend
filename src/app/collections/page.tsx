@@ -2,10 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import AnnouncementBar from "@/components/common/AnnouncementBar";
+import ScrollProgress from "@/components/common/ScrollProgress";
+import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import Newsletter from "@/components/home/Newsletter";
 import CollectionsHero from "@/components/collections/Hero";
+import CollectionStory from "@/components/collections/CollectionStory";
 import CollectionNavigation from "@/components/collections/CollectionNavigation";
 import CollectionGrid from "@/components/collections/CollectionGrid";
 import FeaturedCollection from "@/components/collections/FeaturedCollection";
@@ -26,8 +30,12 @@ function CollectionsContent() {
 
   return (
     <main>
+      <AnnouncementBar />
+      <ScrollProgress />
       <Navbar />
       <CollectionsHero />
+
+      <CollectionStory />
 
       <CollectionNavigation
         collections={collections}
@@ -64,6 +72,7 @@ function CollectionsContent() {
 
       <Newsletter />
       <Footer />
+      <BackToTop />
     </main>
   );
 }

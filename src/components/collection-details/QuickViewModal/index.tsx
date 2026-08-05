@@ -7,6 +7,8 @@ import Link from "next/link";
 import { X, Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import Badge from "@/components/common/Badge";
 import AnimatedButton from "@/components/common/AnimatedButton";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
 
@@ -16,6 +18,9 @@ interface QuickViewModalProps {
 }
 
 export default function QuickViewModal({ product, onClose }: QuickViewModalProps) {
+  const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
+  const { addItem: addToCart, isInCart } = useCart();
+
   useEffect(() => {
     if (product) {
       document.body.style.overflow = "hidden";
@@ -27,10 +32,13 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
     };
   }, [product]);
 
+  const wishlisted = product ? isInWishlist(product.id) : false;
+  const inCart = product ? isInCart(product.id) : false;
+
   return (
     <AnimatePresence>
       {product && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,7 +62,7 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
             </button>
 
             <div className="grid md:grid-cols-2">
-              <div className="relative aspect-square overflow-hidden rounded-l-2xl md:aspect-auto md:min-h-[500px]">
+              <div className="relative aspect-square overflow-hidden rounded-l-2xl md:aspect-auto md:min-h-125">
                 <Image
                   src={product.images[0].src}
                   alt={product.name}
@@ -139,22 +147,33 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
                 )}
 
                 <div className="flex gap-2.5">
-                  <AnimatedButton variant="primary" size="md" className="flex-1">
+                  <AnimatedButton
+                    variant="primary"
+                    size="md"
+                    className="flex-1"
+                    onClick={() => addToCart(product)}
+                  >
                     <ShoppingBag className="h-4 w-4" />
-                    Add to Cart
+                    {inCart ? "Add More" : "Add to Cart"}
                   </AnimatedButton>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-luxury-border text-luxury-text transition-colors hover:border-luxury-gold hover:text-luxury-gold"
-                    aria-label="Add to wishlist"
+                    onClick={() => toggleWishlist(product)}
+                    className={cn(
+                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-300",
+                      wishlisted
+                        ? "border-luxury-gold bg-luxury-gold/5 text-luxury-gold"
+                        : "border-luxury-border text-luxury-text hover:border-luxury-gold hover:text-luxury-gold"
+                    )}
+                    aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
                   >
-                    <Heart className="h-5 w-5" />
+                    <Heart className={cn("h-5 w-5", wishlisted && "fill-luxury-gold")} />
                   </motion.button>
                 </div>
 
                 <Link
-                  href={`/categories/${product.slug}`}
+                  href={`/products/${product.slug}`}
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-luxury-gold transition-colors hover:text-luxury-gold-hover"
                   onClick={onClose}
                 >

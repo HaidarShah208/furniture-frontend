@@ -2,6 +2,9 @@
 
 import { useState, useMemo, use } from "react";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import AnnouncementBar from "@/components/common/AnnouncementBar";
+import ScrollProgress from "@/components/common/ScrollProgress";
+import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import Newsletter from "@/components/home/Newsletter";
@@ -13,6 +16,7 @@ import FilterSidebar from "@/components/collection-details/FilterSidebar";
 import ProductListing from "@/components/collection-details/ProductListing";
 import Pagination from "@/components/collection-details/Pagination";
 import QuickViewModal from "@/components/collection-details/QuickViewModal";
+import RecentlyViewed from "@/components/collection-details/RecentlyViewed";
 import Container from "@/components/common/Container";
 import { getCollectionBySlug, collections as allCollections } from "@/data/collections";
 import { products } from "@/data/products";
@@ -31,12 +35,23 @@ function CollectionDetailContent({ slug }: { slug: string }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const collectionProducts = useMemo(() => {
     const matched = products.filter(
       (p) => p.collection.toLowerCase().replace(/\s+/g, "-") === slug
     );
     let result = matched.length > 0 ? matched : [...products];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.material.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+      );
+    }
 
     if (filters.materials.length > 0) {
       result = result.filter((p) =>
@@ -73,13 +88,17 @@ function CollectionDetailContent({ slug }: { slug: string }) {
     }
 
     return result;
-  }, [slug, filters, sortBy]);
+  }, [slug, filters, sortBy, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(collectionProducts.length / ITEMS_PER_PAGE));
   const paginatedProducts = collectionProducts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  const recentlyViewedProducts = useMemo(() => {
+    return products.filter((p) => p.id !== quickViewProduct?.id).slice(0, 8);
+  }, [quickViewProduct]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -88,11 +107,14 @@ function CollectionDetailContent({ slug }: { slug: string }) {
 
   const handleResetFilters = () => {
     setFilters(defaultPLPFilters);
+    setSearchQuery("");
     setCurrentPage(1);
   };
 
   return (
     <main>
+      <AnnouncementBar />
+      <ScrollProgress />
       <Navbar />
       <CollectionHeader collection={collection} />
 
@@ -119,6 +141,8 @@ function CollectionDetailContent({ slug }: { slug: string }) {
               onGridChange={setGridCols}
               onToggleFilters={() => setFiltersVisible(!filtersVisible)}
               filtersVisible={filtersVisible}
+              searchQuery={searchQuery}
+              onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
             />
 
             <div className="flex gap-8 lg:gap-10">
@@ -157,6 +181,8 @@ function CollectionDetailContent({ slug }: { slug: string }) {
         </Container>
       </section>
 
+      <RecentlyViewed products={recentlyViewedProducts} />
+
       <QuickViewModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
@@ -164,6 +190,7 @@ function CollectionDetailContent({ slug }: { slug: string }) {
 
       <Newsletter />
       <Footer />
+      <BackToTop />
     </main>
   );
 }

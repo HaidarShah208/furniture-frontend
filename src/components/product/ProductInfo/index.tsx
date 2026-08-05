@@ -6,6 +6,8 @@ import type { Product } from "@/types/product";
 import type { SelectedVariants } from "@/types/variant";
 import Badge from "@/components/common/Badge";
 import VariantSelector from "@/components/product/VariantSelector";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCompare } from "@/hooks/useCompare";
 import { cn } from "@/lib/utils";
 
 interface ProductInfoProps {
@@ -27,6 +29,12 @@ export default function ProductInfo({
   currentSku,
   currentAvailability,
 }: ProductInfoProps) {
+  const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleItem: toggleCompare, isInCompare } = useCompare();
+
+  const wishlisted = isInWishlist(product.id);
+  const compared = isInCompare(product.id);
+
   const discount = currentOriginalPrice
     ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100)
     : 0;
@@ -143,10 +151,16 @@ export default function ProductInfo({
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-luxury-border text-luxury-text transition-all duration-300 hover:border-luxury-gold hover:text-luxury-gold"
-          aria-label="Add to wishlist"
+          onClick={() => toggleWishlist(product)}
+          className={cn(
+            "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-300",
+            wishlisted
+              ? "border-luxury-gold bg-luxury-gold/5 text-luxury-gold"
+              : "border-luxury-border text-luxury-text hover:border-luxury-gold hover:text-luxury-gold"
+          )}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="h-5 w-5" />
+          <Heart className={cn("h-5 w-5", wishlisted && "fill-luxury-gold")} />
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -159,8 +173,14 @@ export default function ProductInfo({
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-luxury-border text-luxury-text transition-all duration-300 hover:border-luxury-gold hover:text-luxury-gold"
-          aria-label="Compare product"
+          onClick={() => toggleCompare(product)}
+          className={cn(
+            "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-300",
+            compared
+              ? "border-luxury-gold bg-luxury-gold/5 text-luxury-gold"
+              : "border-luxury-border text-luxury-text hover:border-luxury-gold hover:text-luxury-gold"
+          )}
+          aria-label={compared ? "Remove from compare" : "Add to compare"}
         >
           <GitCompare className="h-5 w-5" />
         </motion.button>
