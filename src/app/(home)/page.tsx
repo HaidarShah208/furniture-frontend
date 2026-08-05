@@ -7,7 +7,6 @@ import BackToTop from "@/components/common/BackToTop";
 import Navbar from "@/components/common/Navbar";
 import Hero from "@/components/home/Hero";
 import BrandPhilosophy from "@/components/home/BrandPhilosophy";
-import FeaturedCollections from "@/components/home/FeaturedCollections";
 import ShopByRoom from "@/components/home/ShopByRoom";
 import Categories from "@/components/home/Categories";
 import BestSellers from "@/components/home/BestSellers";  
@@ -35,7 +34,6 @@ function HomeContent() {
       <Navbar />
       <Hero />
       <BrandPhilosophy />
-      <FeaturedCollections />
       <ShopByRoom />
       <Categories />
       <BestSellers />

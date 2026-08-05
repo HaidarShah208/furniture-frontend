@@ -149,10 +149,7 @@ export default function OrderSuccessPage() {
                 <FileText className="h-4 w-4" />
                 Download Invoice
               </AnimatedButton>
-              <AnimatedButton variant="secondary" size="lg" href="#">
-                <Truck className="h-4 w-4" />
-                Track Order
-              </AnimatedButton>
+             
             </motion.div>
           </div>
         </Container>

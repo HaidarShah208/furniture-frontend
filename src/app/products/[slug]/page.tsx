@@ -12,7 +12,6 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import StickyPurchaseCard from "@/components/product/StickyPurchaseCard";
 import ProductTabs from "@/components/product/ProductTabs";
-import ProductReviews from "@/components/product/ProductReviews";
 import ProductFAQ from "@/components/product/ProductFAQ";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import RecentlyViewed from "@/components/collection-details/RecentlyViewed";
@@ -163,17 +162,12 @@ function ProductDetailContent({ slug }: { slug: string }) {
         </Container>
       </section>
 
-      {/* Reviews */}
-      <ProductReviews productRating={product.rating} reviewCount={product.reviews} />
-
-      {/* FAQ */}
-      <ProductFAQ />
+   
 
       {/* Related Products */}
       <RelatedProducts products={relatedProducts} />
 
-      {/* Recently Viewed */}
-      <RecentlyViewed products={recentlyViewedProducts} />
+ 
 
       {/* Newsletter */}
       <Newsletter />
